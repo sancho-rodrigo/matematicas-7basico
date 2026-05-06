@@ -1,183 +1,195 @@
-                                                                                                                    <!DOCTYPE html>
-                                                                                                                    <html lang="es">
-                                                                                                                    <head>
-                                                                                                                      <meta charset="UTF-8">
-                                                                                                                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                                                                                                      <title>Guía Interactiva — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
-                                                                                                                      <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
-                                                                                                                      <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-                                                                                                                      <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                                                                                                                      <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-                                                                                                                      <style>
-                                                                                                                        body { margin: 0; padding: 0; }
-                                                                                                                        #root { min-height: 100vh; }
-                                                                                                                      </style>
-                                                                                                                    </head>
-                                                                                                                    <body>
-                                                                                                                      <div id="root"></div>
-                                                                                                                      <script type="text/babel" data-type="module">
-                                                                                                                    const { useState, useEffect, useCallback, useRef, useMemo } = React;
-                                                                                                                    
-                                                                                                                    /* ═══ MATH UTILITIES ═══ */
-                                                                                                                    const gcd = (a,b) => { a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a };
-                                                                                                                    const simplify = (n,d) => { if(!d) return [n,d]; const g=gcd(n,d); const sn=n/g, sd=d/g; return sd<0?[-sn,-sd]:[sn,sd] };
-                                                                                                                    const ri = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
-                                                                                                                    const toMixed = (n,d) => { const [sn,sd]=simplify(n,d); if(sd===1) return {w:sn,n:0,d:1}; const w=Math.floor(Math.abs(sn)/sd)*(sn<0?-1:1); const rem=Math.abs(sn)%sd; return {w,n:rem,d:sd} };
-                                                                                                                    const fracEq = (n1,d1,n2,d2) => n1*d2===n2*d1;
-                                                                                                                    const lcm = (a,b) => Math.abs(a*b)/gcd(a,b);
-                                                                                                                    
-                                                                                                                    /* ═══ FRACTION COMPONENT ═══ */
-                                                                                                                    const F = ({n,d,w,sz=18,c}) => {
-                                                                                                                      const s = {display:"inline-flex",alignItems:"center",gap:3,fontFamily:"'Cambria Math','Times New Roman',serif",color:c||"inherit"};
-                                                                                                                      if(d===1&&!w) return <span style={{...s,fontSize:sz,fontWeight:700}}>{n}</span>;
-                                                                                                                      return <span style={s}>
-                                                                                                                        {w?<span style={{fontSize:sz*1.2,fontWeight:700}}>{w}</span>:null}
-                                                                                                                        <span style={{display:"inline-flex",flexDirection:"column",alignItems:"center",lineHeight:1}}>
-                                                                                                                          <span style={{fontSize:sz,fontWeight:700,borderBottom:`2px solid ${c||"currentColor"}`,paddingBottom:1,minWidth:14,textAlign:"center"}}>{n}</span>
-                                                                                                                          <span style={{fontSize:sz,fontWeight:700,paddingTop:1,minWidth:14,textAlign:"center"}}>{d}</span>
-                                                                                                                        </span>
-                                                                                                                      </span>;
-                                                                                                                    };
-                                                                                                                    
-                                                                                                                    /* ═══ PIE CHART ═══ */
-                                                                                                                    const Pie = ({n,d,sz=70,col="#6C5CE7"}) => {
-                                                                                                                      const nn = Math.min(Math.abs(n),d);
-                                                                                                                      return <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
-                                                                                                                        {Array.from({length:d}).map((_,i)=>{
-                                                                                                                          const s=((i/d)*360-90)*Math.PI/180, e=(((i+1)/d)*360-90)*Math.PI/180;
-                                                                                                                          const r=sz/2-3, cx=sz/2, cy=sz/2;
-                                                                                                                          const path=`M${cx} ${cy} L${cx+r*Math.cos(s)} ${cy+r*Math.sin(s)} A${r} ${r} 0 ${(360/d>180)?1:0} 1 ${cx+r*Math.cos(e)} ${cy+r*Math.sin(e)} Z`;
-                                                                                                                          return <path key={i} d={path} fill={i<nn?col:"#E8E8E8"} stroke="white" strokeWidth="1.5"/>;
-                                                                                                                        })}
-                                                                                                                      </svg>;
-                                                                                                                    };
-                                                                                                                    
-                                                                                                                    /* ═══ NUMBER LINE ═══ */
-                                                                                                                    const NumLine = ({dividend,divisor,maxVal=2}) => {
-                                                                                                                      const [dn,dd] = [dividend.n, dividend.d];
-                                                                                                                      const [vn,vd] = [divisor.n, divisor.d];
-                                                                                                                      const w=300, h=80, m=30;
-                                                                                                                      const ticks = maxVal * dd;
-                                                                                                                      const steps = Math.floor((dn*vd)/(dd*vn));
-                                                                                                                      return <svg width={w+m*2} height={h} viewBox={`0 0 ${w+m*2} ${h}`} style={{display:"block",margin:"8px auto"}}>
-                                                                                                                        <line x1={m} y1={50} x2={w+m} y2={50} stroke="#AAA" strokeWidth="2"/>
-                                                                                                                        {Array.from({length:ticks+1}).map((_,i)=>{
-                                                                                                                          const x = m + (i/ticks)*w;
-                                                                                                                          const isMajor = i % dd === 0;
-                                                                                                                          return <g key={i}>
-                                                                                                                            <line x1={x} y1={isMajor?40:44} x2={x} y2={56} stroke="#666" strokeWidth={isMajor?2:1}/>
-                                                                                                                            {isMajor && <text x={x} y={70} textAnchor="middle" fontSize="11" fill="#999">{i/dd}</text>}
-                                                                                                                          </g>;
-                                                                                                                        })}
-                                                                                                                        {Array.from({length:steps}).map((_,i)=>{
-                                                                                                                          const startFrac = (i*vn*dd)/(vd*dd);
-                                                                                                                          const endFrac = ((i+1)*vn*dd)/(vd*dd);
-                                                                                                                          const x1 = m + (startFrac/ticks)*w;
-                                                                                                                          const x2 = m + (endFrac/ticks)*w;
-                                                                                                                          const col = ["#6C5CE7","#00B894","#E17055","#0984E3","#FDCB6E"][i%5];
-                                                                                                                          return <g key={i}>
-                                                                                                                            <line x1={x1} y1={30-i*3} x2={x2} y2={30-i*3} stroke={col} strokeWidth="3" markerEnd="url(#arrow)"/>
-                                                                                                                            <text x={(x1+x2)/2} y={24-i*3} textAnchor="middle" fontSize="10" fill={col}>{i+1}</text>
-                                                                                                                          </g>;
-                                                                                                                        })}
-                                                                                                                        <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                                                                                                                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/></marker></defs>
-                                                                                                                      </svg>;
-                                                                                                                    };
-                                                                                                                    
-                                                                                                                    /* ═══ CONFETTI ═══ */
-                                                                                                                    const Confetti = ({on}) => {
-                                                                                                                      if(!on) return null;
-                                                                                                                      return <div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:9999}}>
-                                                                                                                        {Array.from({length:25}).map((_,i)=>
-                                                                                                                          <div key={i} style={{position:"absolute",left:`${Math.random()*100}%`,top:-10,width:ri(5,10),height:ri(5,10),
-                                                                                                                            background:["#FF6B6B","#4ECDC4","#FFE66D","#A8E6CF","#DDA0DD","#87CEEB"][i%6],
-                                                                                                                            borderRadius:i%3===0?"50%":"1px",animation:`cf ${1+Math.random()*1.5}s ease-in ${Math.random()*0.4}s forwards`}}/>
-                                                                                                                        )}
-                                                                                                                      </div>;
-                                                                                                                    };
-                                                                                                                    
-                                                                                                                    /* ═══ KHAN ACADEMY RESOURCES ═══ */
-                                                                                                                    const KA = {
-                                                                                                                      addFrac:{t:"Suma y resta de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-add-sub-fractions/v/adding-fractions-with-unlike-denominators"},
-                                                                                                                      multFrac:{t:"Multiplicación de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-multiply-fractions/v/multiplying-fractions"},
-                                                                                                                      divFrac:{t:"División de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-dividing-fractions/v/conceptual-understanding-of-dividing-fractions-by-fractions"},
-                                                                                                                      fracDec:{t:"Fracciones y decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-decimals-fractions/v/converting-fractions-to-decimals"},
-                                                                                                                      multDec:{t:"Multiplicación de decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-multiplying-decimals/v/multiplying-decimals"},
-                                                                                                                      divDec:{t:"División de decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-dividing-decimals/v/dividing-decimals"},
-                                                                                                                      fact10:{t:"Factores 10, 100, 1000",u:"https://es.khanacademy.org/math/cc-fifth-grade-math/powers-of-ten/imp-multiplying-and-dividing-decimals-by-10-100-and-1000/v/multiplying-and-dividing-by-powers-of-10"},
-                                                                                                                      mixedNum:{t:"Números mixtos",u:"https://es.khanacademy.org/math/cc-fourth-grade-math/imp-fractions-2/imp-mixed-numbers/v/introduction-to-mixed-numbers"},
-                                                                                                                      problems:{t:"Problemas con fracciones",u:"https://es.khanacademy.org/math/cc-sixth-grade-math/cc-6th-arithmetic-operations/cc-6th-dividing-fractions/v/fraction-word-problem-movie-tickets"}
-                                                                                                                    };
-                                                                                                                    
-                                                                                                                    /* ═══ EXERCISE GENERATORS ═══ */
-                                                                                                                    const GEN = {
-                                                                                                                      addFrac: () => {
-                                                                                                                        const d1=ri(2,8),d2=ri(2,8),n1=ri(1,d1-1),n2=ri(1,d2-1);
-                                                                                                                        const isAdd=Math.random()>0.4;
-                                                                                                                        const cd=lcm(d1,d2); const an1=n1*(cd/d1), an2=n2*(cd/d2);
-                                                                                                                        const rn=isAdd?an1+an2:an1-an2; const [sn,sd]=simplify(Math.abs(rn),cd);
-                                                                                                                        return {type:"frac",display:{n1,d1,op:isAdd?"+":"−",n2,d2},ans:{n:sn,d:sd},ka:"addFrac",
-                                                                                                                          hint:`M.C.M. de ${d1} y ${d2} es ${cd}. Amplifica: ${n1}/${d1} = ${an1}/${cd} y ${n2}/${d2} = ${an2}/${cd}. Luego ${isAdd?"suma":"resta"} los numeradores.`};
-                                                                                                                      },
-                                                                                                                      multFrac: () => {
-                                                                                                                        const t=ri(0,2);
-                                                                                                                        let n1,d1,n2,d2;
-                                                                                                                        if(t===0){d1=ri(2,9);n1=ri(1,d1-1);d2=ri(2,9);n2=ri(1,d2-1)}
-                                                                                                                        else if(t===1){d1=ri(2,6);n1=ri(d1+1,d1*2);d2=ri(2,8);n2=ri(1,d2-1)}
-                                                                                                                        else{const w=ri(1,3);d1=ri(2,5);n1=w*d1+ri(1,d1-1);d2=ri(2,7);n2=ri(1,d2-1)}
-                                                                                                                        const [sn,sd]=simplify(n1*n2,d1*d2);
-                                                                                                                        return {type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showPic:true,
-                                                                                                                          hint:`Multiplica numeradores: ${n1}×${n2}=${n1*n2}. Multiplica denominadores: ${d1}×${d2}=${d1*d2}. Simplifica si es posible.`};
-                                                                                                                      },
-                                                                                                                      divFrac: () => {
-                                                                                                                        const d1=ri(2,8),n1=ri(1,d1*2),d2=ri(2,8),n2=ri(1,d2);
-                                                                                                                        const [sn,sd]=simplify(n1*d2,d1*n2);
-                                                                                                                        return {type:"frac",display:{n1,d1,op:"÷",n2,d2},ans:{n:sn,d:sd},ka:"divFrac",showLine:d1<=8&&d2<=8,
-                                                                                                                          hint:`Inverso multiplicativo de ${n2}/${d2} es ${d2}/${n2}. Luego multiplica: ${n1}/${d1} × ${d2}/${n2}.`};
-                                                                                                                      },
-                                                                                                                      fracDec: () => {
-                                                                                                                        const dir=Math.random()>0.5;
-                                                                                                                        if(dir){
-                                                                                                                          const pairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,8],[3,8],[5,8],[7,8],[1,3],[2,3]];
-                                                                                                                          const [n,d]=pairs[ri(0,pairs.length-1)];
-                                                                                                                          return {type:"toDec",display:{n1:n,d1:d},ans:{dec:Math.round((n/d)*10000)/10000},ka:"fracDec",
-                                                                                                                            hint:`Divide numerador entre denominador: ${n} ÷ ${d}.`};
-                                                                                                                        } else {
-                                                                                                                          const decs=[0.5,0.25,0.75,0.2,0.4,0.6,0.8,0.125,0.375,1.5,2.25];
-                                                                                                                          const dec=decs[ri(0,decs.length-1)];
-                                                                                                                          const pow=dec.toString().split(".")[1]?.length||0;
-                                                                                                                          const d=Math.pow(10,pow);const n=Math.round(dec*d);const [sn,sd]=simplify(n,d);
-                                                                                                                          return {type:"toFrac",displayDec:dec.toString().replace(".",","),ans:{n:sn,d:sd},ka:"fracDec",
-                                                                                                                          hint:`${dec} = ${n}/${d}. Simplifica dividiendo por ${gcd(n,d)}.`};
-                                                                                                                      }
-                                                                                                                    },
-                                                                                                                    multDec: () => {
-                                                                                                                      const a=ri(10,999)/10, b=[2,3,4,5,6,0.5,1.2,1.5,2.5,0.3][ri(0,9)];
-                                                                                                                      const ans=Math.round(a*b*10000)/10000;
-                                                                                                                    const aStr=a.toFixed(2).replace(/\.?0+$/,""), bStr=b.toString();
-                                                                                                                    const decA=(aStr.split(".")[1]||"").length, decB=(bStr.split(".")[1]||"").length;
-                                                                                                                    return {type:"dec",displayDec:`${aStr.replace(".",",")} × ${bStr.replace(".",",")}`,ans:{dec:ans},ka:"multDec",
-                                                                                                                    stepByStep:{a:aStr,b:bStr,decPlaces:decA+decB,product:ans},
-                                                                                                                    hint:`Total de decimales: ${decA}+${decB}=${decA+decB}. Multiplica sin coma, luego colócala ${decA+decB} lugar(es) desde la derecha.`};
-                                                                                                              },
-                                                                                                              divDec: () => {
-                                                                                                              const results=[2,3,4,5,6,8,10,12,15,20];
-                                                                                                            const ans=results[ri(0,results.length-1)];
-                                                                                                          const divs=[0.2,0.3,0.4,0.5,0.6,0.8,1.2,1.5,2.5];
-                                                                                                          const div=divs[ri(0,divs.length-1)];
-                                                                                                        const dividend=Math.round(ans*div*100)/100;
-                                                                                                        const decPlaces=(div.toString().split(".")[1]||"").length;
-                                                                                                        const factor=Math.pow(10,decPlaces);
-                                                                                                        return {type:"dec",displayDec:`${dividend.toString().replace(".",",")} ÷ ${div.toString().replace(".",",")}`,ans:{dec:ans},ka:"divDec",
-                                                                                                          ampStep:{dividend,div,factor,newDividend:dividend*factor,newDiv:div*factor,result:ans},
-                                                                                    hint:`Amplifica ×${factor}: ${dividend.toString().replace(".",",")} → ${(dividend*factor).toString().replace(".",",")} y ${div.toString().replace(".",",")} → ${(div*factor).toString().replace(".",",")}. Luego divide.`};
-                                                                                },
-                                                                                fact10: () => {
-                                                                                const nums=[0.5,1.25,3.45,0.078,12.9,56.7,0.006,245.8,0.34,7.25];
-                                                                                const num=nums[ri(0,nums.length-1)];const f=[10,100,1000][ri(0,2)];const isMult=Math.random()>0.5;
-                                                                                const ans=isMult?num*f:num/f;
-                                                                                return {type:"dec",displayDec:`${num.toString().replace(".",",")} ${isMult?"×":"÷"} ${f.toLocaleString("es-CL")}`,ans:{dec:Math.round(ans*100000)/100000},ka:"fact10",
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía Interactiva — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body{margin:0;padding:0}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+@keyframes cf{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes fi{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes su{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes gl{0%,100%{box-shadow:0 0 15px rgba(108,92,231,0.2)}50%{box-shadow:0 0 30px rgba(108,92,231,0.5)}}
+@keyframes bp{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+input:focus{outline:none;box-shadow:0 0 0 2px #A29BFE}
+button{cursor:pointer;border:none;font-family:inherit;transition:all .2s}
+button:hover{transform:translateY(-2px);filter:brightness(1.1)}
+button:active{transform:translateY(0)}
+.tc:hover{transform:translateY(-4px)!important;border-color:#A29BFE!important}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+/* ═══ MATH UTILITIES ═══ */
+const gcd = (a,b) => { a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a };
+const simplify = (n,d) => { if(!d) return [n,d]; const g=gcd(n,d); const sn=n/g, sd=d/g; return sd<0?[-sn,-sd]:[sn,sd] };
+const ri = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+const toMixed = (n,d) => { const [sn,sd]=simplify(n,d); if(sd===1) return {w:sn,n:0,d:1}; const w=Math.floor(Math.abs(sn)/sd)*(sn<0?-1:1); const rem=Math.abs(sn)%sd; return {w,n:rem,d:sd} };
+const fracEq = (n1,d1,n2,d2) => n1*d2===n2*d1;
+const lcm = (a,b) => Math.abs(a*b)/gcd(a,b);
+
+/* ═══ FRACTION COMPONENT ═══ */
+const F = ({n,d,w,sz=18,c}) => {
+  const s = {display:"inline-flex",alignItems:"center",gap:3,fontFamily:"'Cambria Math','Times New Roman',serif",color:c||"inherit"};
+  if(d===1&&!w) return <span style={{...s,fontSize:sz,fontWeight:700}}>{n}</span>;
+  return <span style={s}>
+    {w?<span style={{fontSize:sz*1.2,fontWeight:700}}>{w}</span>:null}
+    <span style={{display:"inline-flex",flexDirection:"column",alignItems:"center",lineHeight:1}}>
+      <span style={{fontSize:sz,fontWeight:700,borderBottom:`2px solid ${c||"currentColor"}`,paddingBottom:1,minWidth:14,textAlign:"center"}}>{n}</span>
+      <span style={{fontSize:sz,fontWeight:700,paddingTop:1,minWidth:14,textAlign:"center"}}>{d}</span>
+    </span>
+  </span>;
+};
+
+/* ═══ PIE CHART ═══ */
+const Pie = ({n,d,sz=70,col="#6C5CE7"}) => {
+  const nn = Math.min(Math.abs(n),d);
+  return <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`}>
+    {Array.from({length:d}).map((_,i)=>{
+      const s=((i/d)*360-90)*Math.PI/180, e=(((i+1)/d)*360-90)*Math.PI/180;
+      const r=sz/2-3, cx=sz/2, cy=sz/2;
+      const path=`M${cx} ${cy} L${cx+r*Math.cos(s)} ${cy+r*Math.sin(s)} A${r} ${r} 0 ${(360/d>180)?1:0} 1 ${cx+r*Math.cos(e)} ${cy+r*Math.sin(e)} Z`;
+      return <path key={i} d={path} fill={i<nn?col:"#E8E8E8"} stroke="white" strokeWidth="1.5"/>;
+    })}
+  </svg>;
+};
+
+/* ═══ NUMBER LINE ═══ */
+const NumLine = ({dividend,divisor,maxVal=2}) => {
+  const [dn,dd] = [dividend.n, dividend.d];
+  const [vn,vd] = [divisor.n, divisor.d];
+  const w=300, h=80, m=30;
+  const ticks = maxVal * dd;
+  const steps = Math.floor((dn*vd)/(dd*vn));
+  return <svg width={w+m*2} height={h} viewBox={`0 0 ${w+m*2} ${h}`} style={{display:"block",margin:"8px auto"}}>
+    <line x1={m} y1={50} x2={w+m} y2={50} stroke="#AAA" strokeWidth="2"/>
+    {Array.from({length:ticks+1}).map((_,i)=>{
+      const x = m + (i/ticks)*w;
+      const isMajor = i % dd === 0;
+      return <g key={i}>
+        <line x1={x} y1={isMajor?40:44} x2={x} y2={56} stroke="#666" strokeWidth={isMajor?2:1}/>
+        {isMajor && <text x={x} y={70} textAnchor="middle" fontSize="11" fill="#999">{i/dd}</text>}
+      </g>;
+    })}
+    {Array.from({length:steps}).map((_,i)=>{
+      const startFrac = (i*vn*dd)/(vd*dd);
+      const endFrac = ((i+1)*vn*dd)/(vd*dd);
+      const x1 = m + (startFrac/ticks)*w;
+      const x2 = m + (endFrac/ticks)*w;
+      const col = ["#6C5CE7","#00B894","#E17055","#0984E3","#FDCB6E"][i%5];
+      return <g key={i}>
+        <line x1={x1} y1={30-i*3} x2={x2} y2={30-i*3} stroke={col} strokeWidth="3" markerEnd="url(#arrow)"/>
+        <text x={(x1+x2)/2} y={24-i*3} textAnchor="middle" fontSize="10" fill={col}>{i+1}</text>
+      </g>;
+    })}
+    <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/></marker></defs>
+  </svg>;
+};
+
+/* ═══ CONFETTI ═══ */
+const Confetti = ({on}) => {
+  if(!on) return null;
+  return <div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:9999}}>
+    {Array.from({length:25}).map((_,i)=>
+      <div key={i} style={{position:"absolute",left:`${Math.random()*100}%`,top:-10,width:ri(5,10),height:ri(5,10),
+        background:["#FF6B6B","#4ECDC4","#FFE66D","#A8E6CF","#DDA0DD","#87CEEB"][i%6],
+        borderRadius:i%3===0?"50%":"1px",animation:`cf ${1+Math.random()*1.5}s ease-in ${Math.random()*0.4}s forwards`}}/>
+    )}
+  </div>;
+};
+
+/* ═══ KHAN ACADEMY RESOURCES ═══ */
+const KA = {
+  addFrac:{t:"Suma y resta de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-add-sub-fractions/v/adding-fractions-with-unlike-denominators"},
+  multFrac:{t:"Multiplicación de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-multiply-fractions/v/multiplying-fractions"},
+  divFrac:{t:"División de fracciones",u:"https://es.khanacademy.org/math/arithmetic/fraction-arithmetic/arith-review-dividing-fractions/v/conceptual-understanding-of-dividing-fractions-by-fractions"},
+  fracDec:{t:"Fracciones y decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-decimals-fractions/v/converting-fractions-to-decimals"},
+  multDec:{t:"Multiplicación de decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-multiplying-decimals/v/multiplying-decimals"},
+  divDec:{t:"División de decimales",u:"https://es.khanacademy.org/math/arithmetic/arith-decimals/arith-review-dividing-decimals/v/dividing-decimals"},
+  fact10:{t:"Factores 10, 100, 1000",u:"https://es.khanacademy.org/math/cc-fifth-grade-math/powers-of-ten/imp-multiplying-and-dividing-decimals-by-10-100-and-1000/v/multiplying-and-dividing-by-powers-of-10"},
+  mixedNum:{t:"Números mixtos",u:"https://es.khanacademy.org/math/cc-fourth-grade-math/imp-fractions-2/imp-mixed-numbers/v/introduction-to-mixed-numbers"},
+  problems:{t:"Problemas con fracciones",u:"https://es.khanacademy.org/math/cc-sixth-grade-math/cc-6th-arithmetic-operations/cc-6th-dividing-fractions/v/fraction-word-problem-movie-tickets"}
+};
+
+/* ═══ EXERCISE GENERATORS ═══ */
+const GEN = {
+  addFrac: () => {
+    const d1=ri(2,8),d2=ri(2,8),n1=ri(1,d1-1),n2=ri(1,d2-1);
+    const isAdd=Math.random()>0.4;
+    const cd=lcm(d1,d2); const an1=n1*(cd/d1), an2=n2*(cd/d2);
+    const rn=isAdd?an1+an2:an1-an2; const [sn,sd]=simplify(Math.abs(rn),cd);
+    return {type:"frac",display:{n1,d1,op:isAdd?"+":"−",n2,d2},ans:{n:sn,d:sd},ka:"addFrac",
+      hint:`M.C.M. de ${d1} y ${d2} es ${cd}. Amplifica: ${n1}/${d1} = ${an1}/${cd} y ${n2}/${d2} = ${an2}/${cd}. Luego ${isAdd?"suma":"resta"} los numeradores.`};
+  },
+  multFrac: () => {
+    const t=ri(0,2);
+    let n1,d1,n2,d2;
+    if(t===0){d1=ri(2,9);n1=ri(1,d1-1);d2=ri(2,9);n2=ri(1,d2-1)}
+    else if(t===1){d1=ri(2,6);n1=ri(d1+1,d1*2);d2=ri(2,8);n2=ri(1,d2-1)}
+    else{const w=ri(1,3);d1=ri(2,5);n1=w*d1+ri(1,d1-1);d2=ri(2,7);n2=ri(1,d2-1)}
+    const [sn,sd]=simplify(n1*n2,d1*d2);
+    return {type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showPic:true,
+      hint:`Multiplica numeradores: ${n1}×${n2}=${n1*n2}. Multiplica denominadores: ${d1}×${d2}=${d1*d2}. Simplifica si es posible.`};
+  },
+  divFrac: () => {
+    const d1=ri(2,8),n1=ri(1,d1*2),d2=ri(2,8),n2=ri(1,d2);
+    const [sn,sd]=simplify(n1*d2,d1*n2);
+    return {type:"frac",display:{n1,d1,op:"÷",n2,d2},ans:{n:sn,d:sd},ka:"divFrac",showLine:d1<=8&&d2<=8,
+      hint:`Inverso multiplicativo de ${n2}/${d2} es ${d2}/${n2}. Luego multiplica: ${n1}/${d1} × ${d2}/${n2}.`};
+  },
+  fracDec: () => {
+    const dir=Math.random()>0.5;
+    if(dir){
+      const pairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,8],[3,8],[5,8],[7,8],[1,3],[2,3]];
+      const [n,d]=pairs[ri(0,pairs.length-1)];
+      return {type:"toDec",display:{n1:n,d1:d},ans:{dec:Math.round((n/d)*10000)/10000},ka:"fracDec",
+        hint:`Divide numerador entre denominador: ${n} ÷ ${d}.`};
+    } else {
+      const decs=[0.5,0.25,0.75,0.2,0.4,0.6,0.8,0.125,0.375,1.5,2.25];
+      const dec=decs[ri(0,decs.length-1)];
+      const pow=dec.toString().split(".")[1]?.length||0;
+      const d=Math.pow(10,pow);const n=Math.round(dec*d);const [sn,sd]=simplify(n,d);
+      return {type:"toFrac",displayDec:dec.toString().replace(".",","),ans:{n:sn,d:sd},ka:"fracDec",
+        hint:`${dec} = ${n}/${d}. Simplifica dividiendo por ${gcd(n,d)}.`};
+    }
+  },
+  multDec: () => {
+    const a=ri(10,999)/10, b=[2,3,4,5,6,0.5,1.2,1.5,2.5,0.3][ri(0,9)];
+    const ans=Math.round(a*b*10000)/10000;
+    const aStr=a.toFixed(2).replace(/\.?0+$/,""), bStr=b.toString();
+    const decA=(aStr.split(".")[1]||"").length, decB=(bStr.split(".")[1]||"").length;
+    return {type:"dec",displayDec:`${aStr.replace(".",",")} × ${bStr.replace(".",",")}`,ans:{dec:ans},ka:"multDec",
+      stepByStep:{a:aStr,b:bStr,decPlaces:decA+decB,product:ans},
+      hint:`Total de decimales: ${decA}+${decB}=${decA+decB}. Multiplica sin coma, luego colócala ${decA+decB} lugar(es) desde la derecha.`};
+  },
+  divDec: () => {
+    const results=[2,3,4,5,6,8,10,12,15,20];
+    const ans=results[ri(0,results.length-1)];
+    const divs=[0.2,0.3,0.4,0.5,0.6,0.8,1.2,1.5,2.5];
+    const div=divs[ri(0,divs.length-1)];
+    const dividend=Math.round(ans*div*100)/100;
+    const decPlaces=(div.toString().split(".")[1]||"").length;
+    const factor=Math.pow(10,decPlaces);
+    return {type:"dec",displayDec:`${dividend.toString().replace(".",",")} ÷ ${div.toString().replace(".",",")}`,ans:{dec:ans},ka:"divDec",
+      ampStep:{dividend,div,factor,newDividend:dividend*factor,newDiv:div*factor,result:ans},
+      hint:`Amplifica ×${factor}: ${dividend.toString().replace(".",",")} → ${(dividend*factor).toString().replace(".",",")} y ${div.toString().replace(".",",")} → ${(div*factor).toString().replace(".",",")}. Luego divide.`};
+  },
+  fact10: () => {
+    const nums=[0.5,1.25,3.45,0.078,12.9,56.7,0.006,245.8,0.34,7.25];
+    const num=nums[ri(0,nums.length-1)];const f=[10,100,1000][ri(0,2)];const isMult=Math.random()>0.5;
+    const ans=isMult?num*f:num/f;
+    return {type:"dec",displayDec:`${num.toString().replace(".",",")} ${isMult?"×":"÷"} ${f.toLocaleString("es-CL")}`,ans:{dec:Math.round(ans*100000)/100000},ka:"fact10",
       hint:`${isMult?"Mueve la coma":"Mueve la coma"} ${Math.log10(f)} lugar(es) a la ${isMult?"DERECHA":"IZQUIERDA"}.`};
   },
   divInterp: () => {
@@ -273,8 +285,8 @@ function App() {
   const [showRetry,setShowRetry]=useState(false);
   const ref=useRef(null);
 
-  useEffect(()=>{try{const v=localStorage.getItem("ms7");if(v){const d=JSON.parse(v);setStats(d);setName(d.nm||"");if(d.nm)setNamed(true)}}catch(e){}},[]);
-  const save=useCallback((s)=>{setStats(s);try{localStorage.setItem("ms7",JSON.stringify({...s,nm:name}))}catch(e){}},[name]);
+  useEffect(()=>{try{const v=localStorage.getItem("ms7");if(v){const d=JSON.parse(v);setStats(d);setName(d.nm||"");if(d.nm)setNamed(true)}}catch(e){}},[]);;
+  const save=useCallback((s)=>{setStats(s);try{localStorage.setItem("ms7",JSON.stringify({...s,nm:name}))}catch{}},[name]);
 
   const gen=useCallback((tid)=>{
     const t=TOPICS.find(t=>t.id===tid);if(!t)return;
@@ -609,6 +621,6 @@ function App() {
 
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
+</script>
 </body>
 </html>
