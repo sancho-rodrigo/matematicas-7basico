@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guía Interactiva 2.0 — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
+<title>Guía Interactiva — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -75,6 +75,7 @@ const ExprF=({expr,sz=22})=>{
 /* ═══════ AREA MODEL ═══════ */
 const AreaModel=({n1,d1,n2,d2})=>{
   const sC=Math.min(n1,d1),sR=Math.min(n2,d2);
+  const isImp=n1>d1||n2>d2;
   const W=240,H=240,cw=W/d1,ch=H/d2;
   return<div style={{display:"flex",flexDirection:"column",alignItems:"center",margin:"16px 0"}}>
     <p style={{fontSize:11,color:"var(--text-dim)",marginBottom:6,fontWeight:600,letterSpacing:1,textTransform:"uppercase"}}>Modelo de Área</p>
@@ -92,6 +93,7 @@ const AreaModel=({n1,d1,n2,d2})=>{
       <span style={{color:"var(--amber)"}}>■ <F n={n2} d={d2} sz={10}/></span>
       <span style={{color:"var(--emerald)"}}>■ Producto</span>
     </div>
+    {isImp&&<p style={{fontSize:10,color:"var(--text-dim)",marginTop:4,fontStyle:"italic"}}>⚠ Fracción impropia: el modelo muestra solo la parte que cabe en el cuadrado. Usa el algoritmo: num×num / den×den.</p>}
   </div>;
 };
 
@@ -148,9 +150,10 @@ const KA={
    ═══════════════════════════════════════════ */
 const GEN={
   /* ── SUMA/RESTA ── */
-  addFrac:()=>{
+  addFrac:(count)=>{
     const isAdd=Math.random()>0.4;
-    const easy=Math.random()>0.45;
+    // First 10: always easy. After 10: mix easy/medium
+    const easy=count<10?true:Math.random()>0.5;
     let n1,d1,n2,d2,cd,an1,an2,hint;
     if(easy){
       // One denom divides the other
@@ -173,35 +176,42 @@ const GEN={
   },
 
   /* ── MULT FRACCIONES ── */
-  multFrac:()=>{
-    const t=ri(0,3);let n1,d1,n2,d2;
-    if(t===0){d1=ri(2,10);n1=ri(1,d1-1);d2=ri(2,10);n2=ri(1,d2-1)}
+  multFrac:(count)=>{
+    // First 10: only proper fractions (area model makes perfect sense)
+    const t=count<10?0:ri(0,3);
+    let n1,d1,n2,d2;
+    if(t===0){d1=ri(2,count<10?6:10);n1=ri(1,d1-1);d2=ri(2,count<10?6:10);n2=ri(1,d2-1)}
     else if(t===1){d1=ri(2,6);n1=ri(d1+1,d1*3);d2=ri(2,9);n2=ri(1,d2-1)}
     else if(t===2){const w=ri(1,4);d1=ri(2,6);n1=w*d1+ri(1,d1-1);d2=ri(2,8);n2=ri(1,d2-1)}
     else{n1=ri(2,9);d1=1;d2=ri(2,10);n2=ri(1,d2-1)}
     const[sn,sd]=simplify(n1*n2,d1*d2);
-    const canArea=n1<=d1&&n2<=d2&&d1<=8&&d2<=8;
-    return{type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showArea:canArea,
+    // Always show area model - the SVG component clamps values with Math.min
+    return{type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showArea:true,
       hint:`Num: ${n1}×${n2}=${n1*n2}. Den: ${d1}×${d2}=${d1*d2}. MCD=${gcd(n1*n2,d1*d2)}. Simplifica.`};
   },
 
-  /* ── DIV FRACCIONES: visual vs algorithmic ── */
-  divFrac:()=>{
-    const wantVisual=Math.random()>0.45;
+  /* ── DIV FRACCIONES: first 10 easy with visual ── */
+  divFrac:(count)=>{
+    // First 10: always visual-friendly (integer result, small numbers)
+    const wantVisual=count<10?true:Math.random()>0.4;
     let n1,d1,n2,d2;
     if(wantVisual){
-      // Produce integer result, small numbers
-      const result=ri(2,6);const dd=ri(2,6);
+      const result=count<10?ri(2,5):ri(2,6);
+      const dd=ri(2,count<10?4:6);
       const pick=ri(0,2);
-      if(pick===0){n1=result;d1=1;n2=1;d2=dd}        // e.g. 4 ÷ 1/2
-      else if(pick===1){n1=result;d1=dd;n2=1;d2=dd}   // e.g. 3/4 ÷ 1/4
-      else{const m=ri(2,3);n1=m;d1=dd;n2=1;d2=dd}     // e.g. 2/5 ÷ 1/5
+      if(pick===0){n1=result;d1=1;n2=1;d2=dd}
+      else if(pick===1){n1=result;d1=dd;n2=1;d2=dd}
+      else{n1=ri(2,3);d1=dd;n2=1;d2=dd}
     }else{
-      d1=ri(2,9);n1=ri(1,d1*2);d2=ri(2,9);n2=ri(1,d2);
+      // Algorithmic but keep numbers manageable (result ≤ 15)
+      do{
+        d1=ri(2,8);n1=ri(1,d1*2);d2=ri(2,8);n2=ri(1,d2);
+      }while((n1*d2)/(d1*n2)>15);
     }
     const[sn,sd]=simplify(n1*d2,d1*n2);
     const rv=(n1*d2)/(d1*n2);
-    const isVF=wantVisual&&Number.isInteger(rv)&&rv>=1&&rv<=8;
+    // Show number line whenever result is a positive integer ≤ 8
+    const isVF=Number.isInteger(rv)&&rv>=1&&rv<=8;
     return{type:"frac",display:{n1,d1,op:"÷",n2,d2},ans:{n:sn,d:sd},ka:"divFrac",showLine:isVF,
       hint:`Inverso de ${n2}/${d2} es ${d2}/${n2}. Multiplica: ${n1}/${d1} × ${d2}/${n2} = ${n1*d2}/${d1*n2}. Simplifica.`};
   },
@@ -209,9 +219,14 @@ const GEN={
   /* ── FRAC ↔ DEC ── */
   fracDec:()=>{
     if(Math.random()>0.5){
-      const d=ri(2,12);const n=ri(1,d*2);
-      return{type:"toDec",display:{n1:n,d1:d},ans:{dec:Math.round((n/d)*10000)/10000},ka:"fracDec",
-        hint:`Divide ${n} ÷ ${d}. Si es periódico, redondea a 2 decimales.`};
+      // To decimal - use denominators that give clean results
+      const cleanPairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,8],[3,8],[5,8],[7,8],[1,10],[3,10],[7,10],[1,20],[3,20],[7,20]];
+      const[n,d]=cleanPairs[ri(0,cleanPairs.length-1)];
+      // Sometimes add a whole part
+      const w=ri(0,3);
+      const totalN=w*d+n;
+      return{type:"toDec",display:{n1:totalN,d1:d},ans:{dec:Math.round((totalN/d)*1000)/1000},ka:"fracDec",
+        hint:`Divide ${totalN} ÷ ${d}${w>0?` (= ${w} + ${n}/${d})`:""}.`};
     }else{
       const dl=ri(1,3),pw=Math.pow(10,dl),nm=ri(1,pw-1),dec=nm/pw;
       const[sn,sd]=simplify(nm,pw);
@@ -267,10 +282,12 @@ const GEN={
           ans:{dec:Math.round(n*p*100)/100},
           steps:[`Datos: ${n} unidades de ${p.toString().replace(".",",")} kg.`,"Operación: multiplicación (repetir la misma cantidad).",`Plantear: ${n} × ${p.toString().replace(".",",")} = ?`]};
       },
-      ()=>{const total=[4.5,6.4,7.2,8.1,9.6,12.5,15.6][ri(0,6)];const g=ri(3,12);
-        const ans=Math.round(total/g*100)/100;
+      ()=>{
+        // Ensure clean division result (max 2 decimals)
+        const g=ri(3,10);const ansVal=[0.5,0.6,0.75,0.8,1.2,1.25,1.5,1.6,1.8,2.4][ri(0,9)];
+        const total=Math.round(g*ansVal*100)/100;
         return{text:`Hay ${total.toString().replace(".",",")} litros de jugo de murta para repartir en ${g} vasos iguales. ¿Cuántos litros tiene cada vaso?`,
-          ans:{dec:ans},
+          ans:{dec:ansVal},
           steps:[`Datos: ${total.toString().replace(".",",")} litros, ${g} vasos.`,"Operación: división (repartir en partes iguales).",`Plantear: ${total.toString().replace(".",",")} ÷ ${g} = ?`]};
       },
       ()=>{const total=[3.6,4.5,5.4,7.2,8.4,9.6][ri(0,5)];const piece=[0.3,0.4,0.45,0.6,0.9,1.2][ri(0,5)];
@@ -289,12 +306,17 @@ const GEN={
           ans:{dec:ans},
           steps:[`Datos: ${total} litros, cada vaso = 1/${dd} litro.`,`Operación: ${total} ÷ 1/${dd} = ${total} × ${dd}.`,`Resultado: ${ans} vasos.`]};
       },
-      ()=>{const w=ri(1,3);const nd=[[1,3],[2,3],[1,4],[3,4],[1,6],[5,6]][ri(0,5)];
-        const tN=w*nd[1]+nd[0],tD=nd[1];const pd=ri(2,8);
-        const ans=Math.round((tN/tD)/(1/pd)*100)/100;
+      ()=>{const w=ri(1,3);
+        // Pick fraction parts that give clean results when divided by 1/pd
+        const nd=[[1,2],[1,3],[2,3],[1,4],[3,4]][ri(0,4)];
+        const tN=w*nd[1]+nd[0],tD=nd[1];
+        // Pick pd that is a multiple of tD so result is integer
+        const pdOptions=[tD, tD*2, tD*3].filter(x=>x<=8);
+        const pd=pdOptions[ri(0,pdOptions.length-1)];
+        const ans=(tN*pd)/tD; // guaranteed integer
         return{text:`Catalina preparó ${w}`,fracInText:{n:nd[0],d:nd[1]},textAfter:`kg de mermelada de murta. Cada frasco contiene`,fracInText2:{n:1,d:pd},textAfter2:`kg. ¿Cuántos frascos necesita?`,
           ans:{dec:ans},
-          steps:[`Convertir mixto: ${w} ${nd[0]}/${nd[1]} = ${tN}/${tD} kg.`,`Dividir: ${tN}/${tD} ÷ 1/${pd} = ${tN}/${tD} × ${pd}/1.`,`Calcular: ${tN*pd}/${tD}. Simplificar.`]};
+          steps:[`Convertir mixto: ${w} ${nd[0]}/${nd[1]} = ${tN}/${tD} kg.`,`Dividir: ${tN}/${tD} ÷ 1/${pd} = ${tN}/${tD} × ${pd}/1.`,`Calcular: ${tN*pd}/${tD} = ${ans}.`]};
       },
     ];
     const g=tpl[ri(0,tpl.length-1)]();
@@ -390,10 +412,15 @@ function App(){
 
   const gen=useCallback(id=>{
     const t=TOPICS.find(t=>t.id===id);if(!t)return;
-    setEx(t.gen());setUa({whole:"",num:"",den:"",dec:""});setFb(null);setHintOn(false);setVisOn(false);setStepsOn(false);setHelperOn(false);
+    const count=(stats.bt[id]?.t||0);
+    const newEx=t.gen(count);
+    setEx(newEx);setUa({whole:"",num:"",den:"",dec:""});setFb(null);setHintOn(false);
+    // Auto-show visual when available
+    setVisOn(!!(newEx.showArea||newEx.showLine));
+    setStepsOn(false);setHelperOn(false);
     setDStep(1);setDIn({pw:"",ad:"",as:"",q:""});setDFb("");
     setTimeout(()=>ref.current?.focus(),150);
-  },[]);
+  },[stats]);
 
   const start=id=>{setTid(id);setView("practice");gen(id)};
 
@@ -428,8 +455,15 @@ function App(){
       const t=ex.ans?.dec!=null?ex.ans.dec:ex.ans;
       ok=!isNaN(v)&&Math.abs(v-t)<0.015;
     }else{
-      const w=parseInt(ua.whole)||0,un=parseInt(ua.num),ud=parseInt(ua.den);
-      if(!isNaN(un)&&!isNaN(ud)&&ud!==0)ok=fracEq(w*ud+un,ud,ex.ans.n,ex.ans.d);
+      const w=parseInt(ua.whole)||0;
+      const un=ua.num.trim()===""?NaN:parseInt(ua.num);
+      const ud=ua.den.trim()===""?NaN:parseInt(ua.den);
+      if(isNaN(un)&&isNaN(ud)&&w!==0){
+        // Solo entero: tratar como w/1
+        ok=fracEq(w,1,ex.ans.n,ex.ans.d);
+      }else if(!isNaN(un)&&!isNaN(ud)&&ud!==0){
+        ok=fracEq(w*ud+un,ud,ex.ans.n,ex.ans.d);
+      }
     }
     finish(ok);
   };
