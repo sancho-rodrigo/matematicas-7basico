@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guía Interactiva 3.0 — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
+<title>Guía Interactiva LIZ — Matemáticas 7° Básico </title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -177,43 +177,71 @@ const GEN={
 
   /* ── MULT FRACCIONES ── */
   multFrac:(count)=>{
-    // First 10: only proper fractions (area model makes perfect sense)
-    const t=count<10?0:ri(0,3);
-    let n1,d1,n2,d2;
-    if(t===0){d1=ri(2,count<10?6:10);n1=ri(1,d1-1);d2=ri(2,count<10?6:10);n2=ri(1,d2-1)}
-    else if(t===1){d1=ri(2,6);n1=ri(d1+1,d1*3);d2=ri(2,9);n2=ri(1,d2-1)}
-    else if(t===2){const w=ri(1,4);d1=ri(2,6);n1=w*d1+ri(1,d1-1);d2=ri(2,8);n2=ri(1,d2-1)}
-    else{n1=ri(2,9);d1=1;d2=ri(2,10);n2=ri(1,d2-1)}
+    // First 10: proper fractions with area model
+    // After 10: mix proper, improper, mixed, entero×frac
+    const t=count<10?0:ri(0,4);
+    let n1,d1,n2,d2,isMixed=false,mixedHint="";
+    if(t===0){
+      d1=ri(2,count<10?6:10);n1=ri(1,d1-1);d2=ri(2,count<10?6:10);n2=ri(1,d2-1);
+    }else if(t===1){
+      // Impropia × propia
+      d1=ri(2,6);n1=ri(d1+1,d1*3);d2=ri(2,9);n2=ri(1,d2-1);
+    }else if(t===2){
+      // Mixto × propia (mostrado como mixto)
+      isMixed=true;
+      const w=ri(1,3);d1=ri(2,5);const r=ri(1,d1-1);n1=w*d1+r;
+      d2=ri(2,7);n2=ri(1,d2-1);
+      mixedHint=`Convierte el número mixto: ${w} ${r}/${d1} = (${w}×${d1}+${r})/${d1} = ${n1}/${d1}. Luego multiplica: `;
+    }else if(t===3){
+      // Entero × fracción
+      n1=ri(2,9);d1=1;d2=ri(2,10);n2=ri(1,d2-1);
+    }else{
+      // Mixto × mixto
+      isMixed=true;
+      const w1=ri(1,3);d1=ri(2,4);const r1=ri(1,d1-1);n1=w1*d1+r1;
+      const w2=ri(1,2);d2=ri(2,4);const r2=ri(1,d2-1);n2=w2*d2+r2;
+      mixedHint=`Convierte ambos mixtos a impropias: ${w1} ${r1}/${d1} = ${n1}/${d1} y ${w2} ${r2}/${d2} = ${n2}/${d2}. Luego multiplica: `;
+    }
     const[sn,sd]=simplify(n1*n2,d1*d2);
-    // Always show area model - the SVG component clamps values with Math.min
-    return{type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showArea:true,
-      hint:`Num: ${n1}×${n2}=${n1*n2}. Den: ${d1}×${d2}=${d1*d2}. MCD=${gcd(n1*n2,d1*d2)}. Simplifica.`};
+    const showArea=!isMixed&&n1<=d1&&n2<=d2;
+    const baseHint=`${n1}×${n2}=${n1*n2} / ${d1}×${d2}=${d1*d2}. MCD=${gcd(n1*n2,d1*d2)}. Simplifica.`;
+    return{type:"frac",display:{n1,d1,op:"×",n2,d2},ans:{n:sn,d:sd},ka:"multFrac",showArea,isMixed,
+      hint:isMixed?(mixedHint+baseHint):baseHint};
   },
 
   /* ── DIV FRACCIONES: first 10 easy with visual ── */
   divFrac:(count)=>{
-    // First 10: always visual-friendly (integer result, small numbers)
-    const wantVisual=count<10?true:Math.random()>0.4;
-    let n1,d1,n2,d2;
-    if(wantVisual){
+    // First 10: visual-friendly. After 10: mix visual, algorithmic, mixed
+    const mode=count<10?0:ri(0,3); // 0=visual, 1=algorithmic, 2=mixed÷frac, 3=mixed÷mixed
+    let n1,d1,n2,d2,isMixed=false,mixedHint="";
+    if(mode===0){
       const result=count<10?ri(2,5):ri(2,6);
       const dd=ri(2,count<10?4:6);
       const pick=ri(0,2);
       if(pick===0){n1=result;d1=1;n2=1;d2=dd}
       else if(pick===1){n1=result;d1=dd;n2=1;d2=dd}
       else{n1=ri(2,3);d1=dd;n2=1;d2=dd}
+    }else if(mode===1){
+      do{d1=ri(2,8);n1=ri(1,d1*2);d2=ri(2,8);n2=ri(1,d2)}while((n1*d2)/(d1*n2)>15);
+    }else if(mode===2){
+      // Mixto ÷ fracción propia
+      isMixed=true;
+      const w=ri(1,3);d1=ri(2,5);const r=ri(1,d1-1);n1=w*d1+r;
+      d2=ri(2,6);n2=ri(1,d2-1);
+      mixedHint=`Convierte el mixto: ${w} ${r}/${d1} = (${w}×${d1}+${r})/${d1} = ${n1}/${d1}. Luego: `;
     }else{
-      // Algorithmic but keep numbers manageable (result ≤ 15)
-      do{
-        d1=ri(2,8);n1=ri(1,d1*2);d2=ri(2,8);n2=ri(1,d2);
-      }while((n1*d2)/(d1*n2)>15);
+      // Mixto ÷ mixto
+      isMixed=true;
+      const w1=ri(1,2);d1=ri(2,4);const r1=ri(1,d1-1);n1=w1*d1+r1;
+      const w2=ri(1,2);d2=ri(2,4);const r2=ri(1,d2-1);n2=w2*d2+r2;
+      mixedHint=`Convierte ambos: ${w1} ${r1}/${d1} = ${n1}/${d1} y ${w2} ${r2}/${d2} = ${n2}/${d2}. Luego: `;
     }
     const[sn,sd]=simplify(n1*d2,d1*n2);
     const rv=(n1*d2)/(d1*n2);
-    // Show number line whenever result is a positive integer ≤ 8
-    const isVF=Number.isInteger(rv)&&rv>=1&&rv<=8;
-    return{type:"frac",display:{n1,d1,op:"÷",n2,d2},ans:{n:sn,d:sd},ka:"divFrac",showLine:isVF,
-      hint:`Inverso de ${n2}/${d2} es ${d2}/${n2}. Multiplica: ${n1}/${d1} × ${d2}/${n2} = ${n1*d2}/${d1*n2}. Simplifica.`};
+    const isVF=!isMixed&&Number.isInteger(rv)&&rv>=1&&rv<=8;
+    const baseHint=`Inverso de ${n2}/${d2} es ${d2}/${n2}. Multiplica: ${n1}/${d1} × ${d2}/${n2} = ${n1*d2}/${d1*n2}. Simplifica.`;
+    return{type:"frac",display:{n1,d1,op:"÷",n2,d2},ans:{n:sn,d:sd},ka:"divFrac",showLine:isVF,isMixed,
+      hint:isMixed?(mixedHint+baseHint):baseHint};
   },
 
   /* ── FRAC ↔ DEC ── */
@@ -249,10 +277,27 @@ const GEN={
   },
 
   /* ── DIV DECIMALES paso a paso ── */
-  divDec:()=>{
-    const ans=ri(2,30);
-    const dW=ri(0,9),dD=ri(1,9),divisor=dW+dD/10;
-    const dividend=Math.round(ans*divisor*100)/100;
+  divDec:(count)=>{
+    let ans,divisor,dividend;
+    if(count<10){
+      // EASY: divisor amplificado entre 2 y 15, resultado max 3 decimales
+      // Pick clean small divisors: 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.2, 1.5
+      const easyDivisors=[0.2,0.3,0.4,0.5,0.6,0.8,1.2,1.5];
+      divisor=easyDivisors[ri(0,easyDivisors.length-1)];
+      // Pick result that gives max 3 decimal places
+      const easyResults=[2,3,4,5,6,7,8,10,12,15,2.5,3.5,4.5,6.5,1.25,2.75,3.25,6.075];
+      ans=easyResults[ri(0,easyResults.length-1)];
+      dividend=Math.round(ans*divisor*1000)/1000;
+      // Verify amplified divisor ≤ 15
+      const dP=(divisor.toString().split(".")[1]||"").length;
+      const ampDsr=Math.round(divisor*Math.pow(10,dP));
+      if(ampDsr>15){divisor=0.5;ans=ri(2,10);dividend=ans*divisor}
+    }else{
+      // HARDER: any divisor, bigger numbers
+      ans=ri(2,30);
+      const dW=ri(0,9),dD=ri(1,9);divisor=dW+dD/10;
+      dividend=Math.round(ans*divisor*100)/100;
+    }
     const dP=(divisor.toString().split(".")[1]||"").length;
     const factor=Math.pow(10,dP);
     const aDiv=parseFloat((dividend*factor).toFixed(4)),aDsr=Math.round(divisor*factor);
@@ -275,12 +320,23 @@ const GEN={
   /* ── PROBLEMAS CONTEXTUALIZADOS ── */
   problems:()=>{
     const tpl=[
-      ()=>{const n=ri(3,12);const p=[1.25,1.5,2.5,2.75,3.25,4.5,0.75][ri(0,6)];
-        const items=["botellas de agua","kilos de harina","kilos de mariscos","panes","litros de leche","kilos de papas"][ri(0,5)];
-        const place=["Angelmó","la feria de Puerto Montt","la costanera","Chiloé"][ri(0,3)];
-        return{text:`En ${place}, compraron ${n} ${items} de ${p.toString().replace(".",",")} kg cada uno. ¿Cuántos kg en total?`,
+      ()=>{const n=ri(3,12);
+        // Each item has a matching container and unit that makes sense
+        const options=[
+          {item:"botellas de agua",unit:"litros",price:[0.5,0.75,1.25,1.5,2.5]},
+          {item:"bolsas de harina",unit:"kg",price:[0.5,1.25,1.5,2.5,2.75]},
+          {item:"bolsas de mariscos",unit:"kg",price:[0.75,1.25,1.5,2.5,3.25]},
+          {item:"cajas de leche",unit:"litros",price:[0.75,1.0,1.25,1.5]},
+          {item:"sacos de papas",unit:"kg",price:[2.5,3.25,4.5,5.0]},
+          {item:"paquetes de pan",unit:"kg",price:[0.5,0.75,1.25]},
+          {item:"frascos de mermelada de murta",unit:"kg",price:[0.25,0.5,0.75]},
+        ];
+        const opt=options[ri(0,options.length-1)];
+        const p=opt.price[ri(0,opt.price.length-1)];
+        const place=["Angelmó","la feria de Puerto Montt","la costanera","el mercado de Chiloé"][ri(0,3)];
+        return{text:`En ${place}, compraron ${n} ${opt.item} de ${p.toString().replace(".",",")} ${opt.unit} cada una. ¿Cuántos ${opt.unit} compraron en total?`,
           ans:{dec:Math.round(n*p*100)/100},
-          steps:[`Datos: ${n} unidades de ${p.toString().replace(".",",")} kg.`,"Operación: multiplicación (repetir la misma cantidad).",`Plantear: ${n} × ${p.toString().replace(".",",")} = ?`]};
+          steps:[`Datos: ${n} ${opt.item} de ${p.toString().replace(".",",")} ${opt.unit} cada una.`,"Operación: multiplicación (cantidad × peso por unidad).",`Plantear: ${n} × ${p.toString().replace(".",",")} = ?`]};
       },
       ()=>{
         // Ensure clean division result (max 2 decimals)
@@ -415,8 +471,7 @@ function App(){
     const count=(stats.bt[id]?.t||0);
     const newEx=t.gen(count);
     setEx(newEx);setUa({whole:"",num:"",den:"",dec:""});setFb(null);setHintOn(false);
-    // Auto-show visual when available
-    setVisOn(!!(newEx.showArea||newEx.showLine));
+    setVisOn(false);
     setStepsOn(false);setHelperOn(false);
     setDStep(1);setDIn({pw:"",ad:"",as:"",q:""});setDFb("");
     setTimeout(()=>ref.current?.focus(),150);
@@ -527,10 +582,11 @@ function App(){
         <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
           {stats.streak>1&&<span style={{background:"var(--rose-dim)",padding:"3px 10px",borderRadius:20,fontSize:12,color:"var(--rose)",fontWeight:600}}>🔥{stats.streak}</span>}
           {stats.total>0&&<span style={{fontSize:12,color:"var(--text-dim)"}}>Nota: <b style={{color:isRed?"var(--rose)":"var(--emerald)",fontSize:14}}>{grade}</b></span>}
-          <nav style={{display:"flex",gap:2}}>
+          <nav style={{display:"flex",gap:2,alignItems:"center"}}>
             {[["home","Temas"],["progress","Progreso"],["badges","Logros"]].map(([v,l])=>
               <button key={v} onClick={()=>{setView(v);setTid(null);setFb(null)}} style={{padding:"5px 12px",borderRadius:8,fontSize:12,fontWeight:view===v?700:400,background:view===v?"var(--purple)":"transparent",color:"var(--text)"}}>{l}</button>
             )}
+            <button onClick={()=>{if(confirm("¿Reiniciar todo el progreso? Se borrarán estadísticas y nota. Los logros se mantienen.")){save({total:0,ok:0,streak:0,mx:0,bt:{},badges:[...stats.badges],retried:true,consec:{}});setView("home");setTid(null);setFb(null)}}} title="Reiniciar progreso" style={{padding:"4px 8px",borderRadius:8,fontSize:14,background:"transparent",color:"var(--text-dim)",marginLeft:2}}>🔄</button>
           </nav>
         </div>
       </header>
@@ -597,7 +653,20 @@ function App(){
                 <p>{ex.text}{ex.fracInText?<>{" "}<F n={ex.fracInText.n} d={ex.fracInText.d} sz={14}/>{" "}</>:null}{ex.textAfter||""}{ex.fracInText2?<>{" "}<F n={ex.fracInText2.n} d={ex.fracInText2.d} sz={14}/>{" "}</>:null}{ex.textAfter2||""}</p>
               </div>}
               {ex.type==="combined"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:12}}>Resuelve respetando la jerarquía:</p><ExprF expr={ex.displayExpr} sz={24}/></div>}
-              {ex.type==="frac"&&ex.display&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14}}><F n={ex.display.n1} d={ex.display.d1} sz={24}/><span style={{color:"var(--violet)",fontSize:28,fontWeight:700}}>{ex.display.op}</span><F n={ex.display.n2} d={ex.display.d2} sz={24}/><span style={{color:"var(--text-dim)",fontSize:28}}>=</span></div>}
+              {ex.type==="frac"&&ex.display&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14}}>
+                {ex.isMixed&&ex.display.n1>ex.display.d1?(
+                  ex.display.n1%ex.display.d1===0?
+                    <span style={{fontSize:28,fontWeight:700}}>{ex.display.n1/ex.display.d1}</span>
+                    :<F w={Math.floor(ex.display.n1/ex.display.d1)} n={ex.display.n1%ex.display.d1} d={ex.display.d1} sz={24}/>
+                ):<F n={ex.display.n1} d={ex.display.d1} sz={24}/>}
+                <span style={{color:"var(--violet)",fontSize:28,fontWeight:700}}>{ex.display.op}</span>
+                {ex.isMixed&&ex.display.n2>ex.display.d2?(
+                  ex.display.n2%ex.display.d2===0?
+                    <span style={{fontSize:28,fontWeight:700}}>{ex.display.n2/ex.display.d2}</span>
+                    :<F w={Math.floor(ex.display.n2/ex.display.d2)} n={ex.display.n2%ex.display.d2} d={ex.display.d2} sz={24}/>
+                ):<F n={ex.display.n2} d={ex.display.d2} sz={24}/>}
+                <span style={{color:"var(--text-dim)",fontSize:28}}>=</span>
+              </div>}
               {ex.type==="dec"&&<p style={{fontSize:28,fontWeight:700,fontFamily:"'Cambria Math',serif"}}>{ex.displayDec} <span style={{color:"var(--text-dim)"}}>=</span></p>}
               {ex.type==="toDec"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:8}}>Convierte a decimal:</p><span style={{fontSize:28}}><F n={ex.display.n1} d={ex.display.d1} sz={24}/><span style={{color:"var(--text-dim)",margin:"0 8px"}}>=</span></span></div>}
               {ex.type==="toFrac"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:8}}>Convierte a fracción irreducible:</p><span style={{fontSize:28,fontWeight:700}}>{ex.displayDec}</span><span style={{color:"var(--text-dim)",margin:"0 8px",fontSize:28}}>=</span></div>}
