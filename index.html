@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guía Interactiva LIZ — Matemáticas 7° Básico </title>
+<title>Guía Interactiva — Matemáticas 7° Básico — Liceo Isidora Zegers</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -86,7 +86,6 @@ const AreaModel=({n1,d1,n2,d2})=>{
       <rect x={0} y={0} width={sC*cw} height={H} fill="rgba(139,92,246,0.2)"/>
       <rect x={0} y={0} width={W} height={sR*ch} fill="rgba(251,191,36,0.2)"/>
       <rect x={0} y={0} width={sC*cw} height={sR*ch} fill="rgba(52,211,153,0.45)" stroke="var(--emerald)" strokeWidth="2"/>
-      <text x={sC*cw/2} y={sR*ch/2+5} textAnchor="middle" fill="white" fontSize="14" fontWeight="700" fontFamily="Outfit">{sC*sR}/{d1*d2}</text>
     </svg>
     <div style={{display:"flex",gap:14,marginTop:6,fontSize:11}}>
       <span style={{color:"var(--violet)"}}>■ <F n={n1} d={d1} sz={10}/></span>
@@ -119,7 +118,6 @@ const NumLine=({n1,d1,n2,d2})=>{
         return<g key={`j${i}`}><path d={`M${sx} 80 Q${mx} ${32-i*3} ${ex} 80`} fill="none" stroke={cols[i%7]} strokeWidth="2.5" strokeDasharray="5,3"/><text x={mx} y={24-i*3} textAnchor="middle" fill={cols[i%7]} fontSize="10" fontFamily="Outfit" fontWeight="700">salto {i+1}</text></g>;
       })}
     </svg>
-    <p style={{fontSize:12,color:"var(--text-mid)",marginTop:4}}>¿Cuántos saltos de <F n={n2} d={d2} sz={10}/> caben en <F n={n1} d={d1} sz={10}/>? → <b style={{color:"var(--emerald)"}}>{jumps}</b></p>
   </div>;
 };
 
@@ -408,6 +406,51 @@ const GEN={
     const[sn,sd]=simplify(x.n,x.d);
     return{type:"combined",displayExpr:x.e,ans:{n:sn,d:sd},ka:"combined",
       hint:"1° Paréntesis → 2° ×/÷ izq a der → 3° +/− izq a der."};
+  },
+
+  /* ── QUIZ DE CONCEPTOS (V/F y selección múltiple) ── */
+  quiz:()=>{
+    const pool=[
+      // V/F questions
+      {q:"Al multiplicar dos fracciones propias, el resultado siempre es menor que ambos factores.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Sí, porque al multiplicar por un número menor que 1, el resultado se reduce."},
+      {q:"Multiplicar un número natural por una fracción propia siempre da un resultado mayor que el número natural.",opts:["Verdadero","Falso"],correct:1,
+        explain:"Falso. Al multiplicar por una fracción propia (<1), el resultado es menor. Ej: 6 × 1/2 = 3 < 6."},
+      {q:"El producto de 1/2 × 1/2 es igual a 1/4.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. 1×1=1, 2×2=4, resultado = 1/4."},
+      {q:"Para multiplicar un número mixto por una fracción, primero se convierte el mixto a fracción impropia.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. Ej: 1 2/5 = 7/5, luego se multiplica normalmente."},
+      {q:"Dividir por 1/2 es lo mismo que multiplicar por 2.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. El inverso de 1/2 es 2/1 = 2."},
+      {q:"El inverso multiplicativo de 3/7 es 7/3.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. Se intercambian numerador y denominador."},
+      {q:"Al dividir una fracción por otra fracción menor, el resultado siempre es mayor que 1.",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. Al dividir por algo más pequeño, el cociente supera 1."},
+      {q:"0,5 × 0,5 = 0,25",opts:["Verdadero","Falso"],correct:0,
+        explain:"Verdadero. Total decimales: 1+1=2. 5×5=25, colocar coma: 0,25."},
+      // Multiple choice
+      {q:"¿Cuál es el producto de 3/5 × 2/3?",opts:["6/15","5/8","2/5","6/8"],correct:2,
+        explain:"3×2=6, 5×3=15 → 6/15 = 2/5 simplificado (÷3)."},
+      {q:"Al multiplicar 7/4 × 2/7, el resultado simplificado es:",opts:["14/28","1/2","9/11","2/4"],correct:1,
+        explain:"7×2=14, 4×7=28 → 14/28 = 1/2 (÷14)."},
+      {q:"¿Cuál multiplicación tiene como producto 1?",opts:["2/3 × 3/4","5/6 × 6/5","1/2 × 1/2","3/7 × 7/4"],correct:1,
+        explain:"5/6 × 6/5 = 30/30 = 1. Son inversos multiplicativos."},
+      {q:"El producto de 4 × 3/8 es:",opts:["12/8","7/8","3/2","12/32"],correct:2,
+        explain:"4/1 × 3/8 = 12/8 = 3/2 simplificado (÷4)."},
+      {q:"El cociente de 3/4 ÷ 1/2 es:",opts:["3/8","6/4","3/2","2/3"],correct:2,
+        explain:"3/4 × 2/1 = 6/4 = 3/2 (÷2)."},
+      {q:"¿Cuál es el inverso multiplicativo de 5/9?",opts:["9/5","5/9","−5/9","1/5"],correct:0,
+        explain:"Se intercambian numerador y denominador: 5/9 → 9/5."},
+      {q:"Al dividir 0,6 ÷ 0,2, el resultado es:",opts:["0,3","3","0,12","12"],correct:1,
+        explain:"Amplificar ×10: 6 ÷ 2 = 3."},
+      {q:"¿Cuántos vasos de 1/4 litro se llenan con 3 litros?",opts:["3/4","4","12","7"],correct:2,
+        explain:"3 ÷ 1/4 = 3 × 4 = 12 vasos."},
+      {q:"Al multiplicar 2,5 × 0,4 el resultado es:",opts:["10","1,0","0,1","1,00"],correct:1,
+        explain:"Total decimales: 1+1=2. 25×4=100, poner coma 2 lugares: 1,00 = 1,0."},
+    ];
+    const p=pool[ri(0,pool.length-1)];
+    return{type:"quiz",question:p.q,options:p.opts,correctIdx:p.correct,explain:p.explain,ka:"combined",
+      hint:"Lee con atención cada alternativa antes de responder."};
   }
 };
 
@@ -421,6 +464,7 @@ const TOPICS=[
   {id:"fact10",name:"Factores 10, 100, 1000",icon:"10ⁿ",gen:GEN.fact10,color:"#f472b6"},
   {id:"problems",name:"Problemas contextualizados",icon:"📝",gen:GEN.problems,color:"#fb7185"},
   {id:"combined",name:"Desafíos combinados",icon:"🏆",gen:GEN.combined,color:"#c084fc"},
+  {id:"quiz",name:"Quiz de conceptos",icon:"❓",gen:GEN.quiz,color:"#14b8a6"},
 ];
 
 const BADGES=[
@@ -428,10 +472,14 @@ const BADGES=[
   {id:"ten",name:"Constancia",desc:"10 ejercicios",icon:"⭐",req:s=>s.total>=10},
   {id:"thirty",name:"Dedicación",desc:"30 ejercicios",icon:"💫",req:s=>s.total>=30},
   {id:"fifty",name:"Medio centenar",desc:"50 ejercicios",icon:"🏆",req:s=>s.total>=50},
-  {id:"s5",name:"Racha de 5",desc:"5 seguidas",icon:"🔥",req:s=>s.mx>=5},
-  {id:"s10",name:"Imparable",desc:"10 seguidas",icon:"💎",req:s=>s.mx>=10},
-  {id:"all",name:"Exploradora",desc:"Los 9 temas",icon:"🗺️",req:s=>Object.keys(s.bt).length>=9},
-  {id:"master",name:"Maestra",desc:"80%+ en 30+",icon:"👑",req:s=>s.total>=30&&(s.ok/s.total)>=0.8},
+  {id:"hundred",name:"Centenaria",desc:"100 ejercicios completados",icon:"💯",req:s=>s.total>=100},
+  {id:"h150",name:"Navegante experta",desc:"150 ejercicios completados",icon:"🧭",req:s=>s.total>=150},
+  {id:"h200",name:"¡PREMIO! 5 décimas",desc:"200 ejercicios — Pantallazo a rodrigo.sancho@isidorazegers.cl",icon:"🎓",req:s=>s.total>=200,isPrize:true},
+  {id:"s5",name:"Racha de 5",desc:"5 correctas seguidas",icon:"🔥",req:s=>s.mx>=5},
+  {id:"s10",name:"Imparable",desc:"10 correctas seguidas",icon:"💎",req:s=>s.mx>=10},
+  {id:"s20",name:"Leyenda",desc:"20 correctas seguidas",icon:"🌟",req:s=>s.mx>=20},
+  {id:"all",name:"Exploradora",desc:"Practica los 10 temas",icon:"🗺️",req:s=>Object.keys(s.bt).length>=10},
+  {id:"master",name:"Maestra",desc:"80%+ aciertos en 30+ ejercicios",icon:"👑",req:s=>s.total>=30&&(s.ok/s.total)>=0.8},
   {id:"retry",name:"Perseverancia",desc:"Reinicia y mejora",icon:"🔄",req:s=>s.retried},
 ];
 
@@ -493,7 +541,7 @@ function App(){
     const bt={...(stats.bt[tid]||{t:0,o:0})};bt.t++;if(ok)bt.o++;
     const consec=consecCheck(tid,ok);
     const nst={...stats,total:stats.total+1,ok:stats.ok+(ok?1:0),streak:ok?ns:0,mx:nmx,bt:{...stats.bt,[tid]:bt},badges:[...stats.badges],consec};
-    BADGES.forEach(b=>{if(!nst.badges.includes(b.id)&&b.req(nst)){nst.badges.push(b.id);setToast(b);setTimeout(()=>setToast(null),3500)}});
+    BADGES.forEach(b=>{if(!nst.badges.includes(b.id)&&b.req(nst)){nst.badges.push(b.id);setToast(b);if(!b.isPrize)setTimeout(()=>setToast(null),3500)}});
     let cs="";
     if(ex.ans?.dec!=null)cs=ex.ans.dec.toString().replace(".",",");
     else if(ex.ans?.n!=null)cs=ex.ans.d===1?`${ex.ans.n}`:`${ex.ans.n}/${ex.ans.d}`;
@@ -560,8 +608,22 @@ function App(){
   return(
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a0618,#1a1040,#0f0a2a)",color:"var(--text)"}}>
       <Confetti on={confetti}/>
-      {toast&&<div className="anim-slide" style={{position:"fixed",top:80,right:16,background:"linear-gradient(135deg,#fbbf24,#f59e0b)",color:"#1a1040",padding:"14px 20px",borderRadius:14,zIndex:9998,display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 32px rgba(251,191,36,0.3)",maxWidth:300}}>
+      {toast&&!toast.isPrize&&<div className="anim-slide" style={{position:"fixed",top:80,right:16,background:"linear-gradient(135deg,#fbbf24,#f59e0b)",color:"#1a1040",padding:"14px 20px",borderRadius:14,zIndex:9998,display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 32px rgba(251,191,36,0.3)",maxWidth:300}}>
         <span style={{fontSize:28}}>{toast.icon}</span><div><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase"}}>¡Logro!</p><p style={{fontWeight:800}}>{toast.name}</p></div>
+      </div>}
+      {toast&&toast.isPrize&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
+        <div className="anim-in" style={{...cs,padding:36,maxWidth:460,width:"100%",textAlign:"center",border:"2px solid #fbbf24",boxShadow:"0 0 60px rgba(251,191,36,0.3)"}}>
+          <div style={{fontSize:64,marginBottom:12}}>🎓🎉</div>
+          <h2 style={{fontSize:24,fontWeight:900,color:"var(--amber)",marginBottom:8}}>¡FELICITACIONES!</h2>
+          <h3 style={{fontSize:18,fontWeight:700,color:"var(--text)",marginBottom:12}}>¡Has ganado 5 décimas para tu prueba!</h3>
+          <p style={{fontSize:14,color:"var(--text-mid)",marginBottom:6}}>Has completado <b>200 ejercicios</b>. Para obtener tu premio:</p>
+          <div style={{background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.3)",borderRadius:12,padding:14,margin:"12px 0",textAlign:"left"}}>
+            <p style={{fontSize:13,color:"var(--amber)",fontWeight:600,marginBottom:6}}>📋 Instrucciones:</p>
+            <p style={{fontSize:13,color:"var(--text-mid)",lineHeight:1.6}}>1. Toma un <b>pantallazo</b> de esta pantalla.<br/>2. Envíalo al correo:<br/><b style={{color:"var(--violet)"}}>rodrigo.sancho@isidorazegers.cl</b><br/>3. Incluye tu nombre en el asunto.</p>
+          </div>
+          <p style={{fontSize:12,color:"var(--text-dim)",marginBottom:16}}>Nota actual: <b style={{color:"var(--emerald)",fontSize:16}}>{grade}</b> · {stats.total+1} ejercicios · {name}</p>
+          <button onClick={()=>setToast(null)} style={{...btn1,padding:"12px 32px",fontSize:15}}>Entendido ✓</button>
+        </div>
       </div>}
       {kaModal&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9997,padding:20}}>
         <div className="anim-in" style={{...cs,padding:32,maxWidth:420,width:"100%",textAlign:"center",border:"1px solid rgba(251,191,36,0.3)"}}>
@@ -586,7 +648,7 @@ function App(){
             {[["home","Temas"],["progress","Progreso"],["badges","Logros"]].map(([v,l])=>
               <button key={v} onClick={()=>{setView(v);setTid(null);setFb(null)}} style={{padding:"5px 12px",borderRadius:8,fontSize:12,fontWeight:view===v?700:400,background:view===v?"var(--purple)":"transparent",color:"var(--text)"}}>{l}</button>
             )}
-            <button onClick={()=>{if(confirm("¿Reiniciar todo el progreso? Se borrarán estadísticas y nota. Los logros se mantienen.")){save({total:0,ok:0,streak:0,mx:0,bt:{},badges:[...stats.badges],retried:true,consec:{}});setView("home");setTid(null);setFb(null)}}} title="Reiniciar progreso" style={{padding:"4px 8px",borderRadius:8,fontSize:14,background:"transparent",color:"var(--text-dim)",marginLeft:2}}>🔄</button>
+            <button onClick={()=>{if(confirm("¿Reiniciar todo el progreso? Se borrarán estadísticas y nota. Los logros se mantienen.")){save({total:0,ok:0,streak:0,mx:0,bt:{},badges:[...stats.badges],retried:true,consec:{}});setView("home");setTid(null);setFb(null)}}} title="Reiniciar progreso" style={{padding:"4px 10px",borderRadius:8,fontSize:11,fontWeight:600,background:"rgba(251,113,133,0.15)",color:"var(--rose)",marginLeft:4,border:"1px solid rgba(251,113,133,0.2)"}}>🔄 Reiniciar</button>
           </nav>
         </div>
       </header>
@@ -671,6 +733,9 @@ function App(){
               {ex.type==="toDec"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:8}}>Convierte a decimal:</p><span style={{fontSize:28}}><F n={ex.display.n1} d={ex.display.d1} sz={24}/><span style={{color:"var(--text-dim)",margin:"0 8px"}}>=</span></span></div>}
               {ex.type==="toFrac"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:8}}>Convierte a fracción irreducible:</p><span style={{fontSize:28,fontWeight:700}}>{ex.displayDec}</span><span style={{color:"var(--text-dim)",margin:"0 8px",fontSize:28}}>=</span></div>}
               {ex.type==="divDecStep"&&<div><p style={{fontSize:13,color:"var(--text-dim)",marginBottom:8}}>Divide paso a paso:</p><p style={{fontSize:28,fontWeight:700,fontFamily:"'Cambria Math',serif"}}>{ex.dividend.toString().replace(".",",")} ÷ {ex.divisor.toString().replace(".",",")} <span style={{color:"var(--text-dim)"}}>=</span></p></div>}
+              {ex.type==="quiz"&&<div style={{textAlign:"left"}}>
+                <p style={{fontSize:16,fontWeight:600,lineHeight:1.6,marginBottom:16}}>{ex.question}</p>
+              </div>}
             </div>
 
             {/* VISUALS */}
@@ -741,7 +806,17 @@ function App(){
             </div>}
 
             {/* REGULAR INPUT */}
-            {ex.type!=="divDecStep"&&!fb&&<div>
+            {/* QUIZ OPTIONS */}
+            {ex.type==="quiz"&&!fb&&<div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+              {ex.options.map((opt,i)=><button key={i} onClick={()=>finish(i===ex.correctIdx)}
+                style={{padding:"14px 20px",borderRadius:12,border:"1px solid var(--border)",background:ua.dec===i.toString()?"var(--purple)":"rgba(255,255,255,0.04)",color:"var(--text)",fontSize:14,fontWeight:500,textAlign:"left",display:"flex",alignItems:"center",gap:10}}>
+                <span style={{background:"rgba(255,255,255,0.1)",width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,flexShrink:0}}>{String.fromCharCode(65+i)}</span>
+                {opt}
+              </button>)}
+            </div>}
+
+            {/* REGULAR INPUT */}
+            {ex.type!=="divDecStep"&&ex.type!=="quiz"&&!fb&&<div>
               <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:14,marginBottom:16}}>
                 {(ex.type==="dec"||ex.type==="toDec"||ex.type==="problem")?
                   <input ref={ref} value={ua.dec} onChange={e=>setUa({...ua,dec:e.target.value})} onKeyDown={e=>e.key==="Enter"&&check()}
@@ -768,11 +843,13 @@ function App(){
             {/* FEEDBACK */}
             {fb&&<div style={{marginTop:16,padding:16,borderRadius:14,textAlign:"center",background:fb.ok?"var(--emerald-dim)":"var(--rose-dim)",border:`1px solid ${fb.ok?"rgba(52,211,153,0.3)":"rgba(251,113,133,0.3)"}`}}>
               <p style={{fontSize:18,fontWeight:800,color:fb.ok?"var(--emerald)":"var(--rose)",marginBottom:6}}>{fb.msg}</p>
-              {!fb.ok&&<p style={{fontSize:13,color:"var(--text-dim)"}}>Correcta: <b style={{color:"var(--text)"}}>
+              {!fb.ok&&ex.type!=="quiz"&&<p style={{fontSize:13,color:"var(--text-dim)"}}>Correcta: <b style={{color:"var(--text)"}}>
                 {ex.ans?.n!=null&&ex.ans.d!==1?<F n={ex.ans.n} d={ex.ans.d} sz={14}/>:fb.corr}
               </b>
                 {ex.ans?.n!=null&&ex.ans?.d>1&&ex.ans.n>ex.ans.d&&<span style={{marginLeft:10}}>= {toMixed(ex.ans.n,ex.ans.d).w} <F n={toMixed(ex.ans.n,ex.ans.d).n} d={toMixed(ex.ans.n,ex.ans.d).d} sz={12}/></span>}
               </p>}
+              {!fb.ok&&ex.type==="quiz"&&<p style={{fontSize:13,color:"var(--text-dim)"}}>Correcta: <b style={{color:"var(--text)"}}>{String.fromCharCode(65+ex.correctIdx)}) {ex.options[ex.correctIdx]}</b></p>}
+              {ex.type==="quiz"&&ex.explain&&<p style={{fontSize:13,color:"var(--text-mid)",marginTop:8,fontStyle:"italic",background:"rgba(255,255,255,0.03)",padding:10,borderRadius:8}}>📖 {ex.explain}</p>}
               {fb.ok&&ex.ans?.n!=null&&ex.ans?.d>1&&ex.ans.n>ex.ans.d&&
                 <p style={{fontSize:13,color:"var(--text-mid)",marginTop:4}}>Mixto: {toMixed(ex.ans.n,ex.ans.d).w} <F n={toMixed(ex.ans.n,ex.ans.d).n} d={toMixed(ex.ans.n,ex.ans.d).d} sz={13}/></p>}
               <button onClick={()=>{setFb(null);gen(tid)}} style={{...btn1,marginTop:14,padding:"10px 28px"}}>Siguiente →</button>
@@ -816,18 +893,21 @@ function App(){
         {view==="badges"&&<div className="anim-in">
           <h2 style={{fontSize:24,fontWeight:900,marginBottom:20,textAlign:"center",background:"linear-gradient(135deg,var(--amber),var(--rose))",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>🏅 Logros ({stats.badges.length}/{BADGES.length})</h2>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:12}}>
-            {BADGES.map(b=>{const u=stats.badges.includes(b.id);return<div key={b.id} style={{...cs,textAlign:"center",padding:20,opacity:u?1:0.3,border:u?"1px solid rgba(251,191,36,0.3)":"1px solid var(--border)"}}>
+            {BADGES.map(b=>{const u=stats.badges.includes(b.id);return<div key={b.id} style={{...cs,textAlign:"center",padding:20,opacity:u?1:0.3,border:u?(b.isPrize?"2px solid var(--amber)":"1px solid rgba(251,191,36,0.3)"):"1px solid var(--border)",background:b.isPrize&&u?"rgba(251,191,36,0.08)":"var(--card)"}}>
               <div style={{fontSize:36,marginBottom:8}}>{b.icon}</div>
-              <h3 style={{fontSize:14,fontWeight:700,marginBottom:4}}>{b.name}</h3>
+              <h3 style={{fontSize:14,fontWeight:700,marginBottom:4,color:b.isPrize?"var(--amber)":"inherit"}}>{b.name}</h3>
               <p style={{fontSize:12,color:"var(--text-dim)"}}>{b.desc}</p>
-              {u&&<span style={{display:"inline-block",marginTop:8,fontSize:11,padding:"2px 10px",borderRadius:10,background:"var(--emerald-dim)",color:"var(--emerald)"}}>✓</span>}
+              {u&&!b.isPrize&&<span style={{display:"inline-block",marginTop:8,fontSize:11,padding:"2px 10px",borderRadius:10,background:"var(--emerald-dim)",color:"var(--emerald)"}}>✓</span>}
+              {u&&b.isPrize&&<span style={{display:"inline-block",marginTop:8,fontSize:11,padding:"4px 12px",borderRadius:10,background:"var(--amber)",color:"#1a1040",fontWeight:700}}>🎓 ¡PREMIO GANADO!</span>}
             </div>})}
           </div>
         </div>}
       </main>
 
-      <footer style={{textAlign:"center",padding:"20px 14px",color:"var(--text-dim)",fontSize:11,marginTop:40}}>
-        <p>Liceo Isidora Zegers — Profesor Rodrigo Sancho Páez — Matemática 7° Básico — OA2 · OA3</p>
+      <footer style={{textAlign:"center",padding:"20px 14px",color:"var(--text-dim)",fontSize:11,marginTop:40,borderTop:"1px solid var(--border)"}}>
+        <p style={{fontWeight:600,marginBottom:4}}>Profesor Rodrigo Sancho Páez</p>
+        <p>Liceo Isidora Zegers de Puerto Montt — Departamento de Matemática — 7° Básico</p>
+        <p style={{marginTop:4}}>OA2 · OA3 — Multiplicación y división de fracciones y decimales positivos</p>
       </footer>
     </div>
   );
